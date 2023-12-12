@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* Custom CSS for a more modern look */
+    .custom-table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 20px;
+    }
+    .custom-table th, .custom-table td {
+        border: 1px solid #dee2e6;
+        text-align: left;
+        padding: 8px;
+    }
+    .custom-table th {
+        background-color: #f8f9fa;
+    }
+    .custom-button {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        margin-top: 20px;
+        cursor: pointer;
+    }
+    .custom-button:hover {
+        background-color: #0056b3;
+    }
+    .present-teachers-table h2 {
+        margin-top: 40px;
+    }
+</style>
+
+<h1>Arrangement for Absent Teachers</h1>
+<div>
+    <div class="custom-table">
+        {{ table|safe }}
+    </div>
+
+    <button class="custom-button" onclick="downloadCSV()">Download CSV</button>
+</div>
+<div class="present-teachers-table">
+    <h2>Present Teachers</h2>
+    <div class="custom-table">
+        {{ present_teachers_table|safe }}
+    </div>
+</div>
+
+<script>
+    var teacherInitialFreeCounts = {};
+
+    function initializeTeacherCounts() {
+        // Initialize the counts based on the dropdowns when the page loads
+        const allDropdowns = document.querySelectorAll('.custom-select');
+        allDropdowns.forEach(dropdown => {
+            for (let option of dropdown.options) {
+                if (option.value && !teacherInitialFreeCounts[option.value]) {
+                    teacherInitialFreeCounts[option.value] = parseInt(option.getAttribute('data-initial-free-count'));
+                }
+            }
+        });
+    }
+
+    function updateFreePeriodCount() {
+        // Reset the counts to their initial values
+        var currentCounts = {...teacherInitialFreeCounts};
+
+        // Iterate over all dropdowns to calculate the current counts
+        const allDropdowns = document.querySelectorAll('.custom-select');
+        allDropdowns.forEach(dropdown => {
+            const selectedTeacher = dropdown.options[dropdown.selectedIndex].value;
+            if (selectedTeacher) {
+                currentCounts[selectedTeacher]--;
+            }
+        });
+
+        // Update the dropdowns and the teacher table with the new counts
+        allDropdowns.forEach(dropdown => {
+            for (let option of dropdown.options) {
+                if (option.value) {
+                    const remainingFreeCount = currentCounts[option.value];
+                    option.text = option.value + ' - ' + remainingFreeCount + ' free';
+                    if (remainingFreeCount <= 0) {
+                        option.disabled = true;
+                    } else {
+                        option.disabled = false;
+                    }
+                }
+            }
+        });
+
+        // Update the present teachers table
+        updateTeacherTable(currentCounts);
+    }
+
+    function updateTeacherTable(currentCounts) {
+        // Find all rows in the present teachers table
+        const rows = document.querySelectorAll('.present-teachers-table tr');
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length > 1 && currentCounts[cells[0].textContent] !== undefined) {
+                // Update the count in the second cell
+                cells[1].textContent = currentCounts[cells[0].textContent] + ' free';
+            }
+        });
+    }
+
+    window.onload = initializeTeacherCounts;
+</script>
+
+<script>
+    function downloadCSV() {
+        var csvContent = "data:text/csv;charset=utf-8,";
+        var date = new Date().toISOString().slice(0, 10); // Format: YYYY-MM-DD
+
+        // Find the table preceding the button
+        var button = document.querySelector("button[onclick='downloadCSV()']");
+        var table = button.previousElementSibling; 
+        var rows = table.querySelectorAll("tr");
+
+        for (var i = 0; i < rows.length; i++) {
+            var row = [], cols = rows[i].querySelectorAll("td, th");
+
+            // Iterate over columns
+            for (var j = 0; j < cols.length; j++) {
+                // If it's a dropdown, get the selected teacher's name
+                if (cols[j].querySelector('select')) {
+                    var select = cols[j].querySelector('select');
+                    var selectedText = select.options[select.selectedIndex].text;
+                    var teacherName = selectedText.split(' - ')[0]; // Split and get the part before the "-"
+                    row.push('"' + teacherName + '"');
+                } else {
+                    // Else, just get the text content
+                    row.push('"' + cols[j].textContent + '"');
+                }
+            }
+
+            // Join each column with a comma and add a new line at the end
+            csvContent += row.join(",") + "\r\n";
+        }
+
+        // Create a download link and click it to download the CSV
+        var encodedUri = encodeURI(csvContent);
+        var link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "arrangement_" + date + ".csv");
+        document.body.appendChild(link); // Required for Firefox
+        link.click();
+        document.body.removeChild(link); // Clean up
+    }
+</script>
+
+{% endblock %}

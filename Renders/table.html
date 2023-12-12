@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* Custom CSS to add borders to table cells and align text to left */
+    .table th, .table td {
+        border: 1px solid #dee2e6;
+        text-align: left;
+    }
+</style>
+
+    <div class="container">
+        <h1>Teacher Timetable</h1>
+        <form method="POST">
+            <div class="form-group">
+                <label for="teacher">Select Teacher:</label>
+                <select name="teacher" id="teacher" class="form-control">
+                    {% for teacher in teachers %}
+                    <option value="{{ teacher }}" {% if selected_teacher == teacher %} selected {% endif %}>{{ teacher }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">View Timetable</button>
+        </form>
+
+        {% if table %}
+            <h2>Timetable for {{ selected_teacher }}</h2>
+            {{ table|safe }}
+        {% endif %}
+    </div>
+    {% endblock %}

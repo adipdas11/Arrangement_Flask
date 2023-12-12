@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .scrollable-table-container {
+        border: 1px solid #ddd;
+        height: 300px; /* Adjust the height as needed */
+        overflow-y: auto;
+        margin-bottom: 20px;
+    }
+    .teacher-name {
+        font-weight: bold;
+    }
+    .radio-label {
+        margin-left: 5px;
+        margin-right: 10px;
+    }
+</style>
+
+<h1>Select Absent Teachers</h1>
+<div class="scrollable-table-container">
+    <form id="absentTeachersForm" method="POST" action="/arrangement">
+        <table class="table">
+            <tbody>
+                {% for teacher in teachers %}
+                <tr>
+                    <td>
+                        <input class="absent-teacher-checkbox" type="checkbox" name="absent_teacher" value="{{ teacher }}" id="checkbox_{{ teacher }}" onchange="toggleRadioButtons('{{ teacher }}')">
+                    </td>
+                    <td class="teacher-name">
+                        {{ teacher }}
+                    </td>
+                    <td>
+                        <label class="radio-label">
+                            <input type="radio" name="absence_{{ teacher }}" value="entire" id="entire_{{ teacher }}" disabled> Entire Day
+                        </label>
+                    </td>
+                    <td>
+                        <label class="radio-label">
+                            <input type="radio" name="absence_{{ teacher }}" value="first_half" id="first_half_{{ teacher }}" disabled> 1st Half
+                        </label>
+                    </td>
+                    <td>
+                        <label class="radio-label">
+                            <input type="radio" name="absence_{{ teacher }}" value="second_half" id="second_half_{{ teacher }}" disabled> 2nd Half
+                        </label>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div>
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" class="form-control" value="{{ today }}">
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+
+<script>
+    function toggleRadioButtons(teacherId) {
+        var checkbox = document.getElementById('checkbox_' + teacherId);
+        var radioButtons = document.querySelectorAll('input[name="absence_' + teacherId + '"]');
+
+        radioButtons.forEach(function(radio) {
+            radio.disabled = !checkbox.checked; // Disable if checkbox is unchecked, enable if checked
+        });
+    }
+
+    document.getElementById('absentTeachersForm').onsubmit = function() {
+        var checkboxes = document.querySelectorAll('.absent-teacher-checkbox');
+        var isChecked = Array.from(checkboxes).some(function(checkbox) {
+            return checkbox.checked;
+        });
+        
+        if (!isChecked) {
+            alert('Please select at least one teacher\'s name before submitting.');
+            return false;
+        }
+        
+        return true;
+    };
+</script>
+{% endblock %}

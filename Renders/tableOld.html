@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* Custom CSS for the timetable table */
+    .timetable-table th, .timetable-table td {
+        border: 1px solid #dee2e6;
+        text-align: left;
+        padding: 8px;
+    }
+    .timetable-table {
+        width: 100%;
+        margin-bottom: 1rem;
+        color: #212529;
+    }
+</style>
+
+<h1>Teacher Timetable</h1>
+<form method="POST">
+    <div class="form-group">
+        <label for="teacher">Select Teacher:</label>
+        <select name="teacher" id="teacher" class="form-control">
+            {% for teacher in teachers %}
+            <option value="{{ teacher }}" {% if selected_teacher == teacher %} selected {% endif %}>{{ teacher }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">View Timetable</button>
+</form>
+
+{% if table %}
+    <h2>Timetable for {{ selected_teacher }}</h2>
+    {{ table|safe }}
+{% endif %}
+{% endblock %}
